@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "mtailor"
+version = "0.1.0"
+description = ""
+authors = ["Abdul Hadi <ahadi.bese17seecs@seecs.edu.pk>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.11"
+torch = "2.2.0"
+torchvision = "0.17.0"
+numpy = "<2.0.0"
+onnx = "^1.18.0"
+
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
