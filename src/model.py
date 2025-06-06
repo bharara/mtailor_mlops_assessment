@@ -9,14 +9,22 @@ class ImagePreprocessor:
         self.size = size
         self.transform = transforms.Compose(
             [
-                transforms.Resize(size),
+                transforms.Lambda(lambda img: img.convert("RGB")),
+                transforms.Resize(
+                    size, interpolation=transforms.InterpolationMode.BILINEAR
+                ),
                 transforms.CenterCrop(size),
                 transforms.ToTensor(),
-                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406],  # RGB means
+                    std=[0.229, 0.224, 0.225],  # RGB stds
+                ),
             ]
         )
 
     def preprocess(self, img: Image.Image) -> np.ndarray:
+        if not isinstance(img, Image.Image):
+            raise TypeError("Input must be a PIL Image")
         img_tensor = self.transform(img)
         return img_tensor.unsqueeze(0).numpy()
 
