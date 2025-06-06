@@ -46,7 +46,7 @@ The server will start at `http://localhost:8000` with the following endpoints:
 Example `/predict` response:
 ```json
 {
-    "prediction": 0,  // Integer representing the predicted class
+    "prediction": 0,
     "status_code": 200
 }
 ```
