@@ -1,9 +1,13 @@
+import base64
 import os
+from io import BytesIO
 
 import numpy as np
 import pytest
+from fastapi.testclient import TestClient
 from PIL import Image
 
+from main import app
 from model import ImagePreprocessor, OnnxModel
 
 # Constants for testing
@@ -35,6 +39,11 @@ def test_images():
             pytest.skip(f"Test image not found at {img_path}")
         images[img_name] = Image.open(img_path)
     return images
+
+
+@pytest.fixture
+def client():
+    return TestClient(app)
 
 
 def test_preprocessor_initialization():
@@ -150,3 +159,39 @@ def test_preprocessor_invalid_image(preprocessor):
         preprocessor.preprocess(None)
     with pytest.raises(TypeError):
         preprocessor.preprocess(np.zeros((224, 224, 3)))
+
+
+def test_health_endpoint(client):
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "healthy"}
+
+
+def test_predict_endpoint_valid_input(client, test_images):
+    # Test with tench image
+    img = test_images[TENCH_IMAGE]
+    buffered = BytesIO()
+    img.save(buffered, format="JPEG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+
+    response = client.post("/predict", json={"image_data": img_str})
+    assert response.status_code == 200
+    data = response.json()
+    assert "prediction" in data
+    assert "status_code" in data
+    assert data["status_code"] == 200
+    assert data["prediction"] == 0  # Should predict tench (class 0)
+
+    # Test with mud turtle image
+    img = test_images[MUD_TURTLE_IMAGE]
+    buffered = BytesIO()
+    img.save(buffered, format="JPEG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+
+    response = client.post("/predict", json={"image_data": img_str})
+    assert response.status_code == 200
+    data = response.json()
+    assert "prediction" in data
+    assert "status_code" in data
+    assert data["status_code"] == 200
+    assert data["prediction"] == 35  # Should predict mud turtle (class 35)
